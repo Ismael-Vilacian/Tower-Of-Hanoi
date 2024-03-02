@@ -8,10 +8,12 @@ namespace TorreDeHanoi
         public Stack PinTwo { get; set; } = new Stack(3);
         public Stack PinThree { get; set; } = new Stack(3);
         public int NumberOfMoves { get; set; } = 0;
+        public Dictionary<int, Stack> Pins { get; set; } = new Dictionary<int, Stack>();
 
         public void StartGame()
         {
             Console.WriteLine("Game start!\n\n");
+
             InitializePinValues(3);
             InitializeRound();
         }
@@ -20,9 +22,8 @@ namespace TorreDeHanoi
         {
             if (PinOne.IsFull())
             {
-                PinOne.Print("Pino 1", true);
-                PinTwo.Print("\nPino 2", true);
-                PinThree.Print("\nPino 3", true);
+                PrintValues();
+                Pins = new Dictionary<int, Stack> { { 1, PinOne }, { 2, PinTwo }, { 3, PinThree } };
                 return;
             }
             else
@@ -32,20 +33,29 @@ namespace TorreDeHanoi
             }
         }
 
+        public void PrintValues()
+        {
+            PinOne.Print("Pino 1", true);
+            PinTwo.Print("\nPino 2", true);
+            PinThree.Print("\nPino 3", true);
+        }
+
         public void InitializeRound()
         {
             if (CheckGameEnd())
             {
-                Console.WriteLine($@"Parabéns você finalizou a torre com {NumberOfMoves} movimentos!");
+                Console.WriteLine("\n\nParabéns você finalizou a torre com "+NumberOfMoves+" movimentos!\n\n");
                 return;
             }
             else
             {
-                Console.Write("Digite o pino de origem: (1-3)");
+                Console.WriteLine("\nDigite o pino de origem (1-3): ");
                 var origin = GetInputs();
 
-                Console.Write("Digite o pino de destino (1-3): ");
+                Console.WriteLine("\nDigite o pino de destino (1-3): ");
                 var destination = GetInputs();
+
+                MoveDiscs(origin, destination);
 
                 InitializeRound();
             }
@@ -61,7 +71,7 @@ namespace TorreDeHanoi
                 {
                     if (value < 1 || value > 3)
                     {
-                        Console.Write("O valor deve ser maior ou igual a 1 e menor ou igual a 2!");
+                        Console.WriteLine("O valor deve ser maior ou igual a 1 e menor ou igual a 2!\n");
                     }
                     else
                     {
@@ -69,20 +79,53 @@ namespace TorreDeHanoi
                         break;
                     }
                 }
+                else
+                {
+                    Console.WriteLine("Valor inválido, insira um valor numerico maior ou igual a 1 e menor ou igual a 2!\n");
+                }
 
             }
-           
+
             return result;
         }
 
-        public void MoveDiscs(Stack pinOrigin, Stack pinDestination)
+        public void MoveDiscs(int origin, int destination)
         {
+            var pinOrigin = Pins[origin];
+            var pinDestination = Pins[destination];
 
+            if (pinOrigin.IsEmpty())
+            {
+                Console.WriteLine("O pino de origem está vazio!\n\n");
+                return;
+            }
+
+            if (pinDestination.IsFull())
+            {
+                Console.WriteLine("O pino de destino está cheio!\n\n");
+                return;
+            }
+
+            var lastValuleOrigin = pinOrigin.StackArray.Count(valor => valor.HasValue);
+            var lastValuleDestination = pinDestination.StackArray.Count(valor => valor.HasValue);
+
+            if (lastValuleDestination != 0 && lastValuleOrigin > lastValuleDestination)
+            {
+                Console.WriteLine("Não é possível colocar um valor maior sobre um valor menor!\n");
+                return;
+            }
+
+
+            pinDestination.Push((int)pinOrigin.StackArray[lastValuleOrigin - 1]);
+            pinOrigin.Pop();
+            NumberOfMoves++;
+
+            PrintValues();
         }
 
         public bool CheckGameEnd()
         {
-            return PinThree.StackArray[0] == 1 && PinThree.StackArray[1] == 2 && PinThree.StackArray[2] == 3;
+            return PinThree.StackArray[0] == 3 && PinThree.StackArray[1] == 2 && PinThree.StackArray[2] == 1;
         }
     }
 }
